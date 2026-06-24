@@ -1,0 +1,17 @@
+---
+export const prerender = false; // on-demand → served by the SSR Lambda
+
+import Layout from '../layouts/Layout.astro';
+import { greet } from '@lib';
+
+const message = greet('eu-central-1');
+const renderedAt = new Date().toISOString();
+---
+
+<Layout title="SSR demo">
+  <main class="grid min-h-screen place-items-center gap-4 p-8">
+    <h1 class="text-3xl font-bold">Server-rendered</h1>
+    <p class="opacity-70">{message}</p>
+    <div class="badge badge-outline">Rendered at {renderedAt}</div>
+  </main>
+</Layout>

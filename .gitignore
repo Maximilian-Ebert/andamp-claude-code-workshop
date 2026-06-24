@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+cdk.out/
+.astro/
+*.tsbuildinfo
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+.env.local
+.env.*.local
+.env.localstack
+
+# OS / editor
+.DS_Store
+.idea/
+*.swp
+
+# Claude Code — track shared agents/skills/commands, ignore personal settings
+.claude/settings.local.json

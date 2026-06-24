@@ -1,0 +1,115 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import { actions, isInputError } from 'astro:actions';
+
+const result = Astro.getActionResult(actions.login);
+
+if ((result && !result.error) || Astro.locals.user) {
+  return Astro.redirect('/dashboard');
+}
+
+let values = { email: '', password: '' };
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  values = {
+    email: (data.get('email') ?? '').toString(),
+    password: (data.get('password') ?? '').toString(),
+  };
+}
+
+const fieldErrors =
+  result && isInputError(result.error) ? result.error.fields : {};
+const formError =
+  result?.error && !isInputError(result.error)
+    ? result.error.message
+    : undefined;
+---
+
+<Layout title="Sign in — TimeTrack">
+  <main class="grid min-h-screen place-items-center bg-base-100 px-6 py-12">
+    <div class="w-full max-w-sm">
+      <div class="mb-8 text-center">
+        <a class="text-2xl font-bold tracking-tight" href="/"
+          ><span class="text-primary">Time</span>Track</a
+        >
+        <h1 class="mt-6 text-2xl font-bold">Sign in</h1>
+        <p class="mt-1 text-sm opacity-60">
+          Welcome back — enter your details to continue.
+        </p>
+      </div>
+
+      <div class="rounded-box border border-base-300 bg-base-200 p-8">
+        {
+          formError && (
+            <div
+              class="alert alert-error alert-outline mb-4 text-sm"
+              role="alert"
+            >
+              {formError}
+            </div>
+          )
+        }
+        <form
+          class="flex flex-col gap-4"
+          method="post"
+          action={actions.login}
+          novalidate
+        >
+          <label class="flex flex-col gap-2">
+            <span class="text-sm font-medium">Email</span>
+            <input
+              type="text"
+              name="email"
+              value={values.email}
+              placeholder="you@company.com"
+              aria-invalid={fieldErrors.email ? 'true' : undefined}
+              class="input input-bordered w-full aria-[invalid]:input-error"
+            />
+            {
+              fieldErrors.email && (
+                <span class="text-sm text-error">{fieldErrors.email[0]}</span>
+              )
+            }
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium">Password</span>
+              <a class="link link-hover text-xs opacity-70" href="#"
+                >Forgot password?</a
+              >
+            </div>
+            <input
+              type="password"
+              name="password"
+              value={values.password}
+              placeholder="••••••••"
+              aria-invalid={fieldErrors.password ? 'true' : undefined}
+              class="input input-bordered w-full aria-[invalid]:input-error"
+            />
+            {
+              fieldErrors.password && (
+                <span class="text-sm text-error">
+                  {fieldErrors.password[0]}
+                </span>
+              )
+            }
+          </label>
+
+          <button type="submit" class="btn btn-primary mt-2 w-full"
+            >Sign in</button
+          >
+        </form>
+      </div>
+
+      <p class="mt-6 text-center text-sm opacity-60">
+        Don't have an account?
+        <a class="link link-hover font-medium text-primary" href="/#cta"
+          >Start free</a
+        >
+      </p>
+    </div>
+  </main>
+</Layout>

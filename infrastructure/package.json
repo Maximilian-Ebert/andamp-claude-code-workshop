@@ -1,0 +1,45 @@
+{
+  "name": "infrastructure",
+  "version": "0.1.0",
+  "bin": {
+    "infrastructure": "bin/infrastructure.js"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "synth:local": "cdklocal synth ApplicationStack -c localstack=true",
+    "bootstrap:local": "cdklocal bootstrap -c localstack=true",
+    "deploy:local": "cdklocal deploy ApplicationStack --require-approval never -c localstack=true",
+    "destroy:local": "cdklocal destroy -f ApplicationStack -c localstack=true",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^30",
+    "@types/node": "^24.10.1",
+    "aws-cdk": "^2.1125.0",
+    "aws-cdk-local": "^3.0.4",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.6.0",
+    "jest": "^30",
+    "prettier": "^3.8.3",
+    "ts-jest": "^29",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.60.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.238.0",
+    "constructs": "^10.0.0"
+  }
+}

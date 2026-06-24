@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import Stats from '../components/Stats.astro';
+import Features from '../components/Features.astro';
+import CtaBand from '../components/CtaBand.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<Layout title="TimeTrack — Time tracking for teams">
+  <div class="min-h-screen bg-base-100 text-base-content">
+    <SiteHeader />
+    <main>
+      <Hero />
+      <Stats />
+      <Features />
+      <CtaBand />
+    </main>
+    <SiteFooter />
+  </div>
+</Layout>

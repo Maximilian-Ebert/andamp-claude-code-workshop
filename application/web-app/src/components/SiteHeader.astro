@@ -1,0 +1,32 @@
+---
+const links = [
+  { label: 'Product', href: '#features' },
+  { label: 'Performance', href: '#stats' },
+  { label: 'Live demo', href: '/ssr' },
+];
+---
+
+<header class="border-b border-base-300 bg-base-200 text-base-content">
+  <div class="navbar mx-auto max-w-6xl px-6">
+    <div class="flex-1">
+      <a class="text-lg font-bold tracking-tight" href="/"
+        ><span class="text-primary">Time</span>Track</a
+      >
+    </div>
+    <nav class="hidden gap-2 md:flex">
+      {
+        links.map((link) => (
+          <a class="btn btn-ghost btn-sm" href={link.href}>
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="flex-none pl-2">
+      <a
+        class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100"
+        href="/login">Login</a
+      >
+    </div>
+  </div>
+</header>

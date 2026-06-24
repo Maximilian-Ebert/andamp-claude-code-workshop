@@ -1,0 +1,61 @@
+---
+const features = [
+  {
+    title: 'Effortless time entry',
+    body: 'A one-click timer and quick manual entries, so logging hours takes seconds whether you are at your desk or on your phone.',
+    icon: 'M3 17l6-6 4 4 8-8',
+    tint: 'bg-primary/10 text-primary',
+  },
+  {
+    title: 'Projects & clients',
+    body: 'Organise time by project, client, and task, with billable rates and budgets that keep every engagement on track.',
+    icon: 'M3 12h4l3 8 4-16 3 8h4',
+    tint: 'bg-secondary/10 text-secondary',
+  },
+  {
+    title: 'Reports, not spreadsheets',
+    body: 'Timesheets, invoices, and team summaries generated automatically — delivered straight to your inbox and your API.',
+    icon: 'M13 2L3 14h7l-1 8 10-12h-7l1-8z',
+    tint: 'bg-accent text-accent-content',
+  },
+];
+---
+
+<section id="features" class="mx-auto max-w-6xl px-6 py-20 md:py-28">
+  <div class="mx-auto mb-14 max-w-2xl text-center">
+    <h2 class="text-3xl font-bold md:text-4xl">
+      Built for the people doing the work
+    </h2>
+    <p class="mt-4 opacity-70">
+      Every entry ships with the context to trust it — who worked on what, for
+      how long, and exactly what it is worth.
+    </p>
+  </div>
+  <div class="grid gap-6 md:grid-cols-3">
+    {
+      features.map((feature) => (
+        <article class="card border border-base-300 bg-base-100 transition-shadow hover:shadow-lg">
+          <div class="card-body">
+            <div
+              class={`mb-2 grid size-12 place-items-center rounded-lg ${feature.tint}`}
+            >
+              <svg
+                class="size-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+              >
+                <path d={feature.icon} />
+              </svg>
+            </div>
+            <h3 class="card-title">{feature.title}</h3>
+            <p class="opacity-70">{feature.body}</p>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>

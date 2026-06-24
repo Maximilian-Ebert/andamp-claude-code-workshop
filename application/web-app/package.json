@@ -1,0 +1,26 @@
+{
+  "name": "web-app",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node ./scripts/dev.mjs",
+    "dev:astro": "astro dev",
+    "build": "astro build",
+    "build:ssr": "astro build && node build-ssr.mjs",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/node": "^10.1.1",
+    "astro": "^6.4.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "chokidar": "^5.0.0",
+    "daisyui": "^5.5.20",
+    "tailwindcss": "^4.3.0"
+  }
+}

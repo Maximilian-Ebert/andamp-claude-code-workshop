@@ -1,0 +1,46 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import StopWatch from '../components/StopWatch.astro';
+import { actions } from 'astro:actions';
+import { findActiveTimeRecord } from '@data';
+
+const logoutResult = Astro.getActionResult(actions.logout);
+if (logoutResult && !logoutResult.error) {
+  return Astro.redirect('/login');
+}
+
+const user = Astro.locals.user;
+const activeRecord = user ? await findActiveTimeRecord(user.email) : undefined;
+---
+
+<Layout title="Dashboard — TimeTrack">
+  <div class="min-h-screen bg-base-100 text-base-content">
+    <header class="border-b border-base-300 bg-base-200">
+      <div class="navbar mx-auto max-w-6xl px-6">
+        <div class="flex-1">
+          <a class="text-lg font-bold tracking-tight" href="/"
+            ><span class="text-primary">Time</span>Track</a
+          >
+        </div>
+        <form method="post" action={actions.logout}>
+          <button
+            type="submit"
+            class="btn btn-sm border border-base-content bg-transparent text-base-content hover:bg-base-content hover:text-base-100"
+            >Sign out</button
+          >
+        </form>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-6 py-16">
+      <h1 class="text-3xl font-bold">Dashboard</h1>
+      <p class="mt-2 opacity-60">
+        Welcome back, {user?.name} — you're signed in.
+      </p>
+
+      <StopWatch record={activeRecord} />
+    </main>
+  </div>
+</Layout>

@@ -1,0 +1,26 @@
+---
+const stats = [
+  { label: 'Teams onboarded', value: '1.2k' },
+  { label: 'Hours tracked', value: '4.8M' },
+  { label: 'Setup time', value: '5m' },
+  { label: 'Billable uplift', value: '12%' },
+];
+---
+
+<section
+  id="stats"
+  class="border-y border-base-300 bg-base-200 text-base-content"
+>
+  <div
+    class="mx-auto grid max-w-6xl grid-cols-2 gap-px px-6 py-12 md:grid-cols-4"
+  >
+    {
+      stats.map((stat) => (
+        <div class="text-center">
+          <div class="text-4xl font-bold text-primary">{stat.value}</div>
+          <div class="mt-1 text-sm opacity-70">{stat.label}</div>
+        </div>
+      ))
+    }
+  </div>
+</section>

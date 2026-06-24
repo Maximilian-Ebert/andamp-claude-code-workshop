@@ -1,0 +1,17 @@
+packages:
+  - shared/*
+  - functions/handlers/*
+  - web-app
+allowBuilds:
+  esbuild: true
+  sharp: true
+minimumReleaseAge: 2880 # minutes (= 2 days)
+minimumReleaseAgeStrict: true
+minimumReleaseAgeExclude:
+  - '@astrojs/internal-helpers@0.10.0'
+  - '@astrojs/markdown-remark@7.2.0'
+  - astro@6.4.0
+  - '@pkgr/core@0.3.6'
+  - eslint-plugin-prettier@5.5.6
+  - synckit@0.11.13
+  - tinyclip@0.1.13

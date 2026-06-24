@@ -1,0 +1,22 @@
+{
+  "name": "@shared/lib",
+  "version": "0.0.0",
+  "description": "Server-only shared library (must not run in the browser).",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./aws": "./src/aws.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1054.0",
+    "@aws-sdk/client-s3": "^3.1054.0",
+    "@aws-sdk/client-secrets-manager": "^3.1054.0",
+    "@aws-sdk/client-sqs": "^3.1054.0",
+    "@aws-sdk/lib-dynamodb": "^3.1054.0",
+    "jose": "^5.9.6"
+  }
+}

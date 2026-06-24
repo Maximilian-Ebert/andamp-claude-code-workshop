@@ -1,0 +1,222 @@
+---
+import type { TimeRecord } from '@data';
+
+type Props = {
+  record?: TimeRecord;
+};
+
+const { record } = Astro.props;
+
+const isPaused = Boolean(
+  record?.pauses.at(-1) && !record.pauses.at(-1)?.endedAt,
+);
+const initialState = !record ? 'idle' : isPaused ? 'paused' : 'running';
+---
+
+<section
+  id="stopwatch"
+  class="card mt-10 max-w-md bg-base-200 shadow-sm"
+  data-state={initialState}
+  data-record={record ? JSON.stringify(record) : ''}
+>
+  <div class="card-body items-center text-center">
+    <h2 class="card-title">Stopwatch</h2>
+
+    <div class="my-4 flex items-end gap-6">
+      <div>
+        <div class="text-xs uppercase tracking-wide opacity-60">Worked</div>
+        <div id="sw-worked" class="font-mono text-5xl tabular-nums">
+          00:00:00
+        </div>
+      </div>
+      <div>
+        <div class="text-xs uppercase tracking-wide opacity-60">Pause</div>
+        <div id="sw-pause" class="font-mono text-3xl tabular-nums opacity-60">
+          00:00:00
+        </div>
+      </div>
+    </div>
+
+    <div class="card-actions">
+      <button id="sw-primary" type="button" class="btn btn-primary w-28"
+        >Start</button
+      >
+      <button id="sw-stop" type="button" class="btn btn-outline w-28" disabled
+        >Stop</button
+      >
+    </div>
+
+    <p id="sw-error" class="mt-2 hidden text-sm text-error" role="alert"></p>
+
+    <div id="sw-details" class="mt-6 hidden w-full text-left text-sm"></div>
+  </div>
+</section>
+
+<script>
+  import { actions } from 'astro:actions';
+
+  const root = document.getElementById('stopwatch');
+  const workedEl = document.getElementById('sw-worked');
+  const pauseEl = document.getElementById('sw-pause');
+  const primaryBtn = document.getElementById('sw-primary');
+  const stopBtn = document.getElementById('sw-stop');
+  const errorEl = document.getElementById('sw-error');
+  const detailsEl = document.getElementById('sw-details');
+
+  if (
+    root &&
+    workedEl &&
+    pauseEl &&
+    primaryBtn &&
+    stopBtn &&
+    errorEl &&
+    detailsEl
+  ) {
+    const raw = root.dataset.record;
+    let record = raw ? JSON.parse(raw) : undefined;
+    let state = root.dataset.state ?? 'idle';
+    let ticker;
+
+    const PRIMARY = {
+      idle: { label: 'Start', cls: 'btn-primary' },
+      running: { label: 'Pause', cls: 'btn-warning' },
+      paused: { label: 'Resume', cls: 'btn-success' },
+    };
+
+    function format(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const h = String(Math.floor(total / 3600)).padStart(2, '0');
+      const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+      const s = String(total % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function openPause(r) {
+      const last = r.pauses.at(-1);
+      return last && !last.endedAt ? last : undefined;
+    }
+
+    function stamp(iso) {
+      return new Date(iso).toLocaleTimeString();
+    }
+
+    function renderDetails() {
+      if (!record) {
+        detailsEl.classList.add('hidden');
+        detailsEl.innerHTML = '';
+        return;
+      }
+
+      const rows = record.pauses
+        .map((p, i) => {
+          const end = p.endedAt ? stamp(p.endedAt) : 'ongoing';
+          return `<li class="flex justify-between gap-4">
+              <span class="opacity-60">Pause ${i + 1}</span>
+              <span class="font-mono">${stamp(p.startedAt)} → ${end}</span>
+            </li>`;
+        })
+        .join('');
+
+      detailsEl.classList.remove('hidden');
+      detailsEl.innerHTML = `
+        <div class="mb-2 flex justify-between gap-4 border-b border-base-300 pb-2">
+          <span class="opacity-60">Started</span>
+          <span class="font-mono">${stamp(record.startedAt)}</span>
+        </div>
+        <ul class="space-y-1">
+          ${rows || '<li class="opacity-50">No pauses yet</li>'}
+        </ul>`;
+    }
+
+    function workedMs(r, now) {
+      const start = Date.parse(r.startedAt);
+      const end = r.endedAt ? Date.parse(r.endedAt) : now;
+      const paused = r.pauses.reduce((sum, p) => {
+        const from = Date.parse(p.startedAt);
+        const to = p.endedAt ? Date.parse(p.endedAt) : now;
+        return sum + (to - from);
+      }, 0);
+      return end - start - paused;
+    }
+
+    function render() {
+      const now = Date.now();
+      workedEl.textContent = record
+        ? format(workedMs(record, now))
+        : '00:00:00';
+
+      const pause = record ? openPause(record) : undefined;
+      pauseEl.textContent = pause
+        ? format(now - Date.parse(pause.startedAt))
+        : '00:00:00';
+      pauseEl.classList.toggle('opacity-60', !pause);
+
+      const primary = PRIMARY[state];
+      primaryBtn.textContent = primary.label;
+      primaryBtn.className = `btn ${primary.cls} w-28`;
+      stopBtn.disabled = state === 'idle';
+    }
+
+    function startTicking() {
+      stopTicking();
+      ticker = window.setInterval(render, 1000);
+    }
+
+    function stopTicking() {
+      if (ticker !== undefined) {
+        window.clearInterval(ticker);
+        ticker = undefined;
+      }
+    }
+
+    function showError(message) {
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    }
+
+    function clearError() {
+      errorEl.classList.add('hidden');
+    }
+
+    async function run(action, next) {
+      clearError();
+      primaryBtn.disabled = true;
+      stopBtn.disabled = true;
+
+      const { data, error } = await action();
+      primaryBtn.disabled = false;
+
+      if (error || !data) {
+        showError(error?.message ?? 'Something went wrong.');
+        render();
+        return;
+      }
+
+      record = next === 'idle' ? undefined : data;
+      state = next;
+      if (next === 'idle') {
+        stopTicking();
+      } else {
+        startTicking();
+      }
+      render();
+      renderDetails();
+    }
+
+    primaryBtn.addEventListener('click', () => {
+      if (state === 'idle')
+        return run(() => actions.startStopwatch(), 'running');
+      if (state === 'running')
+        return run(() => actions.pauseStopwatch(), 'paused');
+      return run(() => actions.resumeStopwatch(), 'running');
+    });
+
+    stopBtn.addEventListener('click', () => {
+      run(() => actions.stopStopwatch(), 'idle');
+    });
+
+    render();
+    renderDetails();
+    if (state !== 'idle') startTicking();
+  }
+</script>
