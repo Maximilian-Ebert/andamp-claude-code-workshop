@@ -3,8 +3,9 @@ export const prerender = false;
 
 import Layout from '../layouts/Layout.astro';
 import StopWatch from '../components/StopWatch.astro';
+import PastEntries from '../components/PastEntries.astro';
 import { actions } from 'astro:actions';
-import { findActiveTimeRecord } from '@data';
+import { findActiveTimeRecord, findCompletedTimeRecords } from '@data';
 
 const logoutResult = Astro.getActionResult(actions.logout);
 if (logoutResult && !logoutResult.error) {
@@ -13,6 +14,7 @@ if (logoutResult && !logoutResult.error) {
 
 const user = Astro.locals.user;
 const activeRecord = user ? await findActiveTimeRecord(user.email) : undefined;
+const pastRecords = user ? await findCompletedTimeRecords(user.email) : [];
 ---
 
 <Layout title="Dashboard — TimeTrack">
@@ -40,7 +42,10 @@ const activeRecord = user ? await findActiveTimeRecord(user.email) : undefined;
         Welcome back, {user?.name} — you're signed in.
       </p>
 
-      <StopWatch record={activeRecord} />
+      <div class="mt-10 grid gap-10 lg:grid-cols-2">
+        <StopWatch record={activeRecord} />
+        <PastEntries records={pastRecords} />
+      </div>
     </main>
   </div>
 </Layout>

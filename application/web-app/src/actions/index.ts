@@ -4,6 +4,9 @@ import {
   pauseStopwatch,
   resumeStopwatch,
   stopStopwatch,
+  listPastEntries,
+  saveTimeRecordEdit,
+  deleteTimeRecordEntry,
 } from './time-tracking';
 
 export const server = {
@@ -13,4 +16,7 @@ export const server = {
   pauseStopwatch,
   resumeStopwatch,
   stopStopwatch,
+  listPastEntries,
+  saveTimeRecordEdit,
+  deleteTimeRecordEntry,
 };

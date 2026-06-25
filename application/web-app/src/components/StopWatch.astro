@@ -97,7 +97,7 @@ const initialState = !record ? 'idle' : isPaused ? 'paused' : 'running';
     }
 
     function stamp(iso) {
-      return new Date(iso).toLocaleTimeString();
+      return new Date(iso).toLocaleTimeString('de-DE');
     }
 
     function renderDetails() {
@@ -189,7 +189,7 @@ const initialState = !record ? 'idle' : isPaused ? 'paused' : 'running';
       if (error || !data) {
         showError(error?.message ?? 'Something went wrong.');
         render();
-        return;
+        return undefined;
       }
 
       record = next === 'idle' ? undefined : data;
@@ -201,6 +201,8 @@ const initialState = !record ? 'idle' : isPaused ? 'paused' : 'running';
       }
       render();
       renderDetails();
+
+      return data;
     }
 
     primaryBtn.addEventListener('click', () => {
@@ -211,8 +213,9 @@ const initialState = !record ? 'idle' : isPaused ? 'paused' : 'running';
       return run(() => actions.resumeStopwatch(), 'running');
     });
 
-    stopBtn.addEventListener('click', () => {
-      run(() => actions.stopStopwatch(), 'idle');
+    stopBtn.addEventListener('click', async () => {
+      const stopped = await run(() => actions.stopStopwatch(), 'idle');
+      if (stopped) location.reload();
     });
 
     render();

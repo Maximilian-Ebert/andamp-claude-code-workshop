@@ -1,0 +1,455 @@
+---
+import type { TimeRecord } from '@data';
+
+type Props = {
+  records?: TimeRecord[];
+};
+
+const { records = [] } = Astro.props;
+
+function formatStamp(iso: string): string {
+  return new Date(iso).toLocaleString('de-DE');
+}
+
+function formatDuration(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = String(Math.floor(total / 3600)).padStart(2, '0');
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+  const s = String(total % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function pausedMs(record: TimeRecord): number {
+  return record.pauses.reduce((sum, pause) => {
+    const from = Date.parse(pause.startedAt);
+    const to = pause.endedAt ? Date.parse(pause.endedAt) : from;
+    return sum + (to - from);
+  }, 0);
+}
+
+function workedMs(record: TimeRecord): number {
+  const start = Date.parse(record.startedAt);
+  const end = record.endedAt ? Date.parse(record.endedAt) : start;
+  return end - start - pausedMs(record);
+}
+---
+
+<section id="past-entries" class="mt-10" data-records={JSON.stringify(records)}>
+  <h2 class="card-title">History</h2>
+
+  {
+    records.length === 0 ? (
+      <p class="mt-4 opacity-60">No completed entries yet.</p>
+    ) : (
+      <ul class="mt-4 space-y-4">
+        {records.map((record) => (
+          <li class="rounded-box border border-base-300 bg-base-200 p-4 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex gap-6">
+                <div>
+                  <div class="text-xs opacity-60">Worked</div>
+                  <div class="font-mono text-lg">
+                    {formatDuration(workedMs(record))}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-xs opacity-60">Pause</div>
+                  <div class="font-mono text-lg">
+                    {formatDuration(pausedMs(record))}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline"
+                  data-edit
+                  data-started-at={record.startedAt}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline btn-error"
+                  data-delete
+                  data-started-at={record.startedAt}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 space-y-1 border-t border-base-300 pt-3 text-sm">
+              <div class="flex justify-between gap-6">
+                <span class="opacity-60">Started</span>
+                <span class="font-mono">{formatStamp(record.startedAt)}</span>
+              </div>
+              <div class="flex justify-between gap-6">
+                <span class="opacity-60">Ended</span>
+                <span class="font-mono">
+                  {record.endedAt ? formatStamp(record.endedAt) : '—'}
+                </span>
+              </div>
+            </div>
+
+            {record.pauses.length > 0 && (
+              <ul class="mt-3 space-y-1 border-t border-base-300 pt-3 text-sm">
+                {record.pauses.map((pause, index) => (
+                  <li class="flex justify-between gap-4">
+                    <span class="opacity-60">Pause {index + 1}</span>
+                    <span class="font-mono">
+                      {formatStamp(pause.startedAt)} →{' '}
+                      {pause.endedAt ? formatStamp(pause.endedAt) : '—'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>
+
+<dialog id="edit-dialog" class="modal">
+  <div class="modal-box">
+    <h3 class="text-lg font-bold">Edit entry</h3>
+
+    <div
+      id="edit-form-error"
+      class="alert alert-error alert-outline mt-4 hidden text-sm"
+      role="alert"
+    >
+    </div>
+
+    <form id="edit-form" class="mt-4 flex flex-col gap-4" novalidate>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium">Start</span>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            inputmode="numeric"
+            placeholder="TT.MM.JJJJ"
+            data-input-for="startedAt"
+            data-part="date"
+            class="input input-bordered w-full aria-[invalid]:input-error"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            placeholder="HH:MM"
+            data-input-for="startedAt"
+            data-part="time"
+            class="input input-bordered w-24 aria-[invalid]:input-error"
+          />
+        </div>
+        <span class="text-sm text-error" data-error-for="startedAt"></span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium">End</span>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            inputmode="numeric"
+            placeholder="TT.MM.JJJJ"
+            data-input-for="endedAt"
+            data-part="date"
+            class="input input-bordered w-full aria-[invalid]:input-error"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            placeholder="HH:MM"
+            data-input-for="endedAt"
+            data-part="time"
+            class="input input-bordered w-24 aria-[invalid]:input-error"
+          />
+        </div>
+        <span class="text-sm text-error" data-error-for="endedAt"></span>
+      </div>
+
+      <div id="edit-pauses" class="flex flex-col gap-3"></div>
+
+      <div class="modal-action">
+        <button type="button" id="edit-cancel" class="btn btn-ghost">
+          Cancel
+        </button>
+        <button type="button" id="edit-save" class="btn btn-primary"
+          >Save</button
+        >
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+  import { actions, isInputError } from 'astro:actions';
+
+  const root = document.getElementById('past-entries');
+  const dialog = document.getElementById('edit-dialog') as HTMLDialogElement;
+  const form = document.getElementById('edit-form');
+  const pausesEl = document.getElementById('edit-pauses');
+  const formErrorEl = document.getElementById('edit-form-error');
+  const saveBtn = document.getElementById('edit-save') as HTMLButtonElement;
+  const cancelBtn = document.getElementById('edit-cancel');
+
+  if (
+    root &&
+    dialog &&
+    form &&
+    pausesEl &&
+    formErrorEl &&
+    saveBtn &&
+    cancelBtn
+  ) {
+    const records = JSON.parse(root.dataset.records ?? '[]');
+    let originalStartedAt = '';
+
+    function pad(value) {
+      return String(value).padStart(2, '0');
+    }
+
+    function toLocalParts(iso) {
+      const date = new Date(iso);
+      const day = pad(date.getDate());
+      const month = pad(date.getMonth() + 1);
+      const year = date.getFullYear();
+      const hours = pad(date.getHours());
+      const minutes = pad(date.getMinutes());
+      return { date: `${day}.${month}.${year}`, time: `${hours}:${minutes}` };
+    }
+
+    function fieldInputs(key) {
+      const dateEl = form.querySelector(
+        `[data-input-for="${key}"][data-part="date"]`,
+      );
+      const timeEl = form.querySelector(
+        `[data-input-for="${key}"][data-part="time"]`,
+      );
+      return { dateEl, timeEl };
+    }
+
+    function setLocalInput(key, iso) {
+      const { dateEl, timeEl } = fieldInputs(key);
+      if (!dateEl || !timeEl) return;
+
+      const parts = iso ? toLocalParts(iso) : { date: '', time: '' };
+      dateEl.value = parts.date;
+      timeEl.value = parts.time;
+    }
+
+    function findRecord(startedAt) {
+      return records.find((r) => r.startedAt === startedAt);
+    }
+
+    function clearErrors() {
+      formErrorEl.classList.add('hidden');
+      formErrorEl.textContent = '';
+
+      form.querySelectorAll('[data-error-for]').forEach((span) => {
+        span.textContent = '';
+      });
+      form.querySelectorAll('input').forEach((input) => {
+        input.removeAttribute('aria-invalid');
+      });
+    }
+
+    function setFieldError(key, message) {
+      const span = form.querySelector(`[data-error-for="${key}"]`);
+
+      if (span) {
+        span.textContent = message;
+        form.querySelectorAll(`[data-input-for="${key}"]`).forEach((input) => {
+          input.setAttribute('aria-invalid', 'true');
+        });
+        return;
+      }
+
+      showFormError(message);
+    }
+
+    function showFormError(message) {
+      formErrorEl.textContent = message;
+      formErrorEl.classList.remove('hidden');
+    }
+
+    function pauseField(key, label, iso) {
+      const parts = iso ? toLocalParts(iso) : { date: '', time: '' };
+      return `
+        <div class="flex flex-col gap-1">
+          <span class="text-xs">${label}</span>
+          <div class="flex gap-2">
+            <input type="text" inputmode="numeric" placeholder="TT.MM.JJJJ"
+              data-input-for="${key}" data-part="date" value="${parts.date}"
+              class="input input-sm input-bordered w-full aria-[invalid]:input-error" />
+            <input type="text" inputmode="numeric" placeholder="HH:MM"
+              data-input-for="${key}" data-part="time" value="${parts.time}"
+              class="input input-sm input-bordered w-20 aria-[invalid]:input-error" />
+          </div>
+          <span class="text-xs text-error" data-error-for="${key}"></span>
+        </div>`;
+    }
+
+    function buildPauseRows(record) {
+      pausesEl.innerHTML = record.pauses
+        .map((pause, i) => {
+          const startField = pauseField(
+            `pauses.${i}.startedAt`,
+            'Start',
+            pause.startedAt,
+          );
+          const endField = pauseField(
+            `pauses.${i}.endedAt`,
+            'End',
+            pause.endedAt,
+          );
+          return `
+            <div class="rounded-box border border-base-300 p-3">
+              <div class="mb-2 text-xs font-medium opacity-60">Pause ${i + 1}</div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                ${startField}
+                ${endField}
+              </div>
+            </div>`;
+        })
+        .join('');
+    }
+
+    function openEditor(startedAt) {
+      const record = findRecord(startedAt);
+      if (!record) return;
+
+      clearErrors();
+      originalStartedAt = record.startedAt;
+      buildPauseRows(record);
+
+      setLocalInput('startedAt', record.startedAt);
+      setLocalInput('endedAt', record.endedAt);
+
+      dialog.showModal();
+    }
+
+    const DATE_PATTERN = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+    const TIME_PATTERN = /^(\d{2}):(\d{2})$/;
+
+    function readIso(key) {
+      const { dateEl, timeEl } = fieldInputs(key);
+      const dateValue = dateEl.value.trim();
+      const timeValue = timeEl.value.trim();
+      if (!dateValue || !timeValue) {
+        setFieldError(key, 'Pflichtfeld.');
+        return undefined;
+      }
+
+      const dateMatch = DATE_PATTERN.exec(dateValue);
+      const timeMatch = TIME_PATTERN.exec(timeValue);
+      if (!dateMatch || !timeMatch) {
+        setFieldError(key, 'Format: TT.MM.JJJJ und HH:MM');
+        return undefined;
+      }
+
+      const [, day, month, year] = dateMatch.map(Number);
+      const [, hours, minutes] = timeMatch.map(Number);
+      const parsed = new Date(year, month - 1, day, hours, minutes);
+
+      const isValid =
+        parsed.getFullYear() === year &&
+        parsed.getMonth() === month - 1 &&
+        parsed.getDate() === day &&
+        parsed.getHours() === hours &&
+        parsed.getMinutes() === minutes;
+      if (!isValid) {
+        setFieldError(key, 'Ungültiges Datum oder Uhrzeit.');
+        return undefined;
+      }
+
+      return parsed.toISOString();
+    }
+
+    function collectInput() {
+      const startedAt = readIso('startedAt');
+      const endedAt = readIso('endedAt');
+
+      const pauseStartEls = pausesEl.querySelectorAll(
+        '[data-input-for$=".startedAt"][data-part="date"]',
+      );
+
+      let hasError = startedAt === undefined || endedAt === undefined;
+      const pauses = [];
+
+      pauseStartEls.forEach((_el, i) => {
+        const pauseStart = readIso(`pauses.${i}.startedAt`);
+        const pauseEnd = readIso(`pauses.${i}.endedAt`);
+        if (pauseStart === undefined || pauseEnd === undefined) {
+          hasError = true;
+          return;
+        }
+        pauses.push({ startedAt: pauseStart, endedAt: pauseEnd });
+      });
+
+      if (hasError || startedAt === undefined || endedAt === undefined) {
+        return undefined;
+      }
+
+      return { originalStartedAt, startedAt, endedAt, pauses };
+    }
+
+    async function save() {
+      clearErrors();
+
+      const payload = collectInput();
+      if (!payload) return;
+
+      saveBtn.disabled = true;
+      const { data, error } = await actions.saveTimeRecordEdit(payload);
+      saveBtn.disabled = false;
+
+      if (error) {
+        if (isInputError(error)) {
+          error.issues.forEach((issue) => {
+            setFieldError(issue.path.join('.'), issue.message);
+          });
+        } else {
+          showFormError(error.message);
+        }
+        return;
+      }
+
+      if (data) location.reload();
+    }
+
+    async function deleteEntry(startedAt) {
+      if (!startedAt) return;
+      if (!window.confirm('Diesen Eintrag wirklich löschen?')) return;
+
+      const { data, error } = await actions.deleteTimeRecordEntry({
+        startedAt,
+      });
+
+      if (error) {
+        window.alert(error.message);
+        return;
+      }
+
+      if (data) location.reload();
+    }
+
+    root.querySelectorAll('[data-edit]').forEach((button) => {
+      button.addEventListener('click', () => {
+        openEditor(button.getAttribute('data-started-at') ?? '');
+      });
+    });
+
+    root.querySelectorAll('[data-delete]').forEach((button) => {
+      button.addEventListener('click', () => {
+        deleteEntry(button.getAttribute('data-started-at') ?? '');
+      });
+    });
+
+    cancelBtn.addEventListener('click', () => dialog.close());
+    saveBtn.addEventListener('click', save);
+  }
+</script>

@@ -19,7 +19,13 @@ export {
 export {
   type Pause,
   type TimeRecord,
+  type TimeRecordChanges,
+  type TimeRecordErrorCode,
+  TimeRecordError,
   findActiveTimeRecord,
+  findCompletedTimeRecords,
+  updateTimeRecord,
+  deleteTimeRecord,
   startTimeRecord,
   pauseTimeRecord,
   resumeTimeRecord,
