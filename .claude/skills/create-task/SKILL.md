@@ -57,3 +57,4 @@ House-style rules:
 
 - Before writing, Glob `tasks/*.md` to check for an existing story with the same slug. If one exists, read it and confirm with the user before overwriting — don't clobber another participant's work.
 - After writing, report the path(s) you created. Hand off to the **`engineer`** agent for implementation — this skill writes the task, it does not implement it.
+
