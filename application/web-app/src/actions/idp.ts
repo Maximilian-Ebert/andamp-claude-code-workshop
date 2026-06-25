@@ -12,8 +12,8 @@ export const login = defineAction({
   handler: async ({ email, password }, { cookies }) => {
     const user = await findUser(email);
 
-    const isValid = !user || isValidPassword(password, user.passwordHash);
-    if (isValid) {
+    const isInavlid = !user || !isValidPassword(password, user.passwordHash);
+    if (isInavlid) {
       throw new ActionError({
         code: 'UNAUTHORIZED',
         message: 'Invalid email or password.',
